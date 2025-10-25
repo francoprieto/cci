@@ -1,11 +1,12 @@
 node {
     
     stage('Preparacion') { 
+        deleteDir()
         // Clonamos el proyecto
         sh 'git clone https://github.com/DataDog/vulnerable-java-application.git'
         // Ingresamos al 
-        sh 'cd vulnerable-java-application'
-        sh './gradlew'        
+        sh 'cd vulnerable-java-application/vulnerable-java-application'
+        sh 'ls -la'        
     }
     stage('Compilacion') {
         // Ingresamos al directorio del proyecto
