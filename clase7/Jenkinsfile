@@ -32,8 +32,8 @@ node {
     }
 
     post {
-        always {
-            echo 'Pipeline finalizado. Verifique la aplicacion desplegada en http://localhost:9090'
+        success {
+            sh 'echo "Pipeline finalizado. Verifique la aplicacion desplegada en http://localhost:9090"'
         }
     }    
 }
