@@ -4,9 +4,10 @@
 
 ![Ejercicio](./res/actividad3.png)
 
-* Paso 1: Construir una imagen llamada "myjenkins-blueocean:2.516.3-1" a partir del Dockerfile
+* Paso 1: Construir una imagen llamada "myjenkins-blueocean:2.516.3-1" a partir del Dockerfile que se encuentra en el directorio: docker/jenkins/
 
 ```bash
+cd ./docker/jenkins/
 docker build -t myjenkins-blueocean:2.516.3-1 .
 ```
 
@@ -53,3 +54,4 @@ Pegamos el código del comando anterior en el campo "Administrator password" de 
 * Paso 7: Verificar despliegue
 Ingrese a la siguiente dirección:
 > http://localhost:9090
+

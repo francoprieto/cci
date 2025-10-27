@@ -1,24 +1,28 @@
-node {
+pipeline {
     
-    stage('Preparacion') { 
-        // Limpiamos nuestro workspace
-        deleteDir()
-        // Clonamos el proyecto
-        sh 'git clone https://github.com/DataDog/vulnerable-java-application.git'
+    agent any
 
-    }
-    stage('Compilacion y Construimos') {
-        dir('vulnerable-java-application'){
-            // Compilamos y contruimos el jar
-            sh './gradlew clean build bootJar'
+    stages {
+        stage('Preparacion') { 
+            // Limpiamos nuestro workspace
+            deleteDir()
+            // Clonamos el proyecto
+            sh 'git clone https://github.com/DataDog/vulnerable-java-application.git'
+
         }
-    }
-    stage('Despliegue') {
-        dir('vulnerable-java-application'){
-            // Matamos si existe una instancia en ejecucion
-            sh 'pkill -f "build/libs/domain-tester-service-0.0.1-SNAPSHOT.jar" || true'
-            // Se ejecuta la aplicacion
-            sh 'nohup java -jar build/libs/domain-tester-service-0.0.1-SNAPSHOT.jar --server.port=9090 &'
+        stage('Compilacion y Construimos') {
+            dir('vulnerable-java-application'){
+                // Compilamos y contruimos el jar
+                sh './gradlew clean build bootJar'
+            }
+        }
+        stage('Despliegue') {
+            dir('vulnerable-java-application'){
+                // Matamos si existe una instancia en ejecucion
+                sh 'pkill -f "build/libs/domain-tester-service-0.0.1-SNAPSHOT.jar" || true'
+                // Se ejecuta la aplicacion
+                sh 'nohup java -jar build/libs/domain-tester-service-0.0.1-SNAPSHOT.jar --server.port=9090 &'
+            }
         }
     }
 }
