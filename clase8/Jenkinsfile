@@ -18,7 +18,6 @@ pipeline {
                 }
             }
             steps {
-                sh 'cd /src/vulnerable-java-application/'
                 sh 'semgrep scan --config p/java -v --json-output=semgrep.json'
             }
         }
