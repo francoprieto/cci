@@ -1,0 +1,45 @@
+pipeline {
+    
+    agent{
+        docker {
+            image 'semgrep/semgrep'
+            args '-v "${PWD}:/src"'
+        }
+    }
+
+    stages {
+        stage('Checkout'){
+            steps {
+                sh 'rm -rf *'
+                sh 'git clone https://github.com/DataDog/vulnerable-java-application.git'  
+            }
+        }
+
+        stage('Analizando codigo'){
+
+            steps {
+                sh 'cd /src/vulnerable-java-application/'
+                sh 'semgrep scan --config p/java -v --json-output=semgrep.json'
+            }
+        }
+
+        stage('Compilacion y Construimos') {
+            steps {
+                sh 'cd vulnerable-java-application'
+                sh './gradlew clean build bootJar'
+            }
+        }        
+    }
+
+    stage('Despliegue') {
+        agent {
+            docker { image 'eclipse-temurin:21-jdk' }
+        }
+        dir('vulnerable-java-application'){
+            // Matamos si existe una instancia en ejecucion
+            sh 'pkill -f "build/libs/domain-tester-service-0.0.1-SNAPSHOT.jar" || true'
+            // Se ejecuta la aplicacion
+            sh 'nohup java -jar build/libs/domain-tester-service-0.0.1-SNAPSHOT.jar --server.port=9090 &'
+        }
+    }
+}
