@@ -1,26 +1,20 @@
 pipeline {
-    
     agent any
 
     stages {
-        stage('Checkout'){
+        stage('Analizando codigo') {         
             steps {
-                sh 'rm -rf *'
-                sh 'git clone https://github.com/DataDog/vulnerable-java-application.git'  
+                sh '''
+                    cd "${WORKSPACE}"
+                    rm -rf vulnerable-java-application 
+                    git clone https://github.com/DataDog/vulnerable-java-application.git
+                    docker pull semgrep/semgrep
+                    docker run --rm -v "$(pwd)/vulnerable-java-application:/src" semgrep/semgrep semgrep scan
+                '''
             }
         }
-
-        stage('Analizando codigo'){
-            agent{
-                docker {
-                    image 'semgrep/semgrep'
-                    args '-v "${PWD}/vulnerable-java-application:/src"'
-                }
-            }
-            steps {
-                sh 'semgrep scan --config p/java -v --json-output=semgrep.json'
-            }
-        }
+    }
+}       
 /*
         stage('Compilacion y Construimos') {
             steps {
@@ -39,7 +33,7 @@ pipeline {
                 // Se ejecuta la aplicacion
                 sh 'nohup java -jar build/libs/domain-tester-service-0.0.1-SNAPSHOT.jar --server.port=9090 &'
             }
-        }        
-    */
+        }    
     }
-}
+}            
+    */
