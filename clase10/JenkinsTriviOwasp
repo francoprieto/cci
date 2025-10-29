@@ -1,0 +1,61 @@
+pipeline {
+    agent any
+    stages {
+        stage('SonarQube analysis') {
+            steps {
+                script {
+                    scannerHome = tool 'sonar-scanner'// debe coincidir con el nombre de definido en Jenkins -> Manage Jenkins -> Tool Configuration
+                }
+                withSonarQubeEnv('sonar-server') {// Si ha configurado más de una conexión de servidor global, puede especificar su nombre según lo configurado en Jenkins
+                    sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=clase-sonar -Dsonar.sources=."                
+                }
+            }
+        }
+
+        stage('IST-Trivy') {
+
+            agent {
+                docker { image 'ubuntu:22.04'
+                    args '-u root'
+                }
+            }
+
+            steps {
+                sh 'apt update'
+                sh 'apt install wget apt-transport-https gnupg lsb-release -y'
+                sh 'wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key |  apt-key add -'
+                sh 'echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main |  tee -a /etc/apt/sources.list.d/trivy.list'
+                sh 'apt update'
+                sh 'apt install trivy -y'
+                sh 'trivy image -f json -o report-trivy.json pygoat/pygoat:v2.0.1' // se analiza la imagen pygoat como simulando una nueva versión del artefacto, en el cual, se debería construir y subir al repositorio en stages anteriores
+                archiveArtifacts artifacts: 'report-trivy.json', allowEmptyArchive: true
+            }
+
+        }
+
+        stage('Compilation') {
+            agent {
+                docker { image 'php:8.2-cli' }
+            }
+            steps {
+                sh 'echo "Compilando..."'
+            }
+        }
+        stage('Build') {
+            agent {
+                docker { image 'php:8.2-cli' }
+            }
+            steps {
+                sh 'echo "docker build -t my-php-app ."'
+            }
+        }
+        stage('Deploy') {
+            agent {
+                docker { image 'php:8.2-cli' }
+            }
+            steps {
+                sh 'echo "docker run my-php-app ."'
+            }
+        }
+    }
+}
