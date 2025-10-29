@@ -1,13 +1,28 @@
+/*
+Integrar SonarQube (docker) en el pipeline creado anteriormente.
+Crear un stage propio
+Ver si se puede generar un reporte que persista en Jenkins.
+Ver si se puede o no bloquear el pipeline según nivel de vulnerabilidades encontradas (documentación herramienta).
+Gestionar un falso positivo.
+Opcional: remediar vulnerabilidades encontradas.
+Para este ejercicio hay que tener tanto Jenkins como Sonarqube desplegados en docker y en la misma red. 
+
+Para realizar el ejercicio hay que instalar el plugin "SonarQube Scanner for Jenkins" para poder realizar la conexión entre Jenkins y Sonarqube.
+Una vez instalado y configurado (tanto en la sección "System" como en "Tools" con la configuración adecuada que aparece en la documentación), 
+creamos el "Credentials" necesario para autenticarnos (será un api token de Sonarqube, descrito también en la documentación) 
+y finalmente creamos un pipeline con el siguiente código.
+*/
 pipeline {
     agent any
     stages {
         stage('SonarQube analysis') {
             steps {
                 script {
-                    scannerHome = tool 'sonarqube-scanner'// debe coincidir con el nombre de definido en Jenkins -> Manage Jenkins -> Tool Configuration
+                    scannerHome = tool 'sonar-scanner'// debe coincidir con el nombre de definido en Jenkins -> Manage Jenkins -> Tool Configuration
                 }
                 withSonarQubeEnv('Sonarqube-docker') {// Si ha configurado más de una conexión de servidor global, puede especificar su nombre según lo configurado en Jenkins
-                    sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=jenkins-testing -Dsonar.sources=."                }
+                    sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=jenkins-testing -Dsonar.sources=."                
+                }
             }
         }
         stage('Compilation') {
