@@ -4,22 +4,50 @@
 
 ![Ejercicio](./res/actividad2.png)
 
-### Antes de continuar, **si no se tiene instalado y configurado Jenkins** ejecutar los pasos 1 al 4 de la clase anterior 
+### Antes de continuar, **si no se tiene instalado y configurado Jenkins** ejecutar los pasos 1 al 4 de la clase anterior  (clase7)
 
-* **Paso 1:** Construir la imagen java-python con el siguiente comando: 
+* **Paso 1:** Crear el pipeline en Jenkins: 
+    * En la pantalla principal hacer click en "+ New Item"
+    * Poner nombre del pipeline, seleccionar el tipo "Pipeline" y hacer click en "Ok"
+    * En la siguiente pantalla seleccionamos "GitHub project", allì debemos determinar el URL del repositorio, para este caso https://github.com/francoprieto/cci.git
+    * Abajo, en el apartado "Pipeline", el campo "Definition" seleccionamos la opción "Pipeline script from SCM"
+    * En "SCM" seleccionamos "Git"
+    * En "Repository URL" ponemos: https://github.com/francoprieto/cci.git
+    * En "Branches to build" -> "Branch Specifier" poner: */main
+    * En "Script Path" completar con: clase8/JenkinsSemgrep
+    * Finalmente hacer click en "Apply" y luego "Save"
+
+* **Paso 2:** Ejecutar y verificar pipeline
+    * En la pantalla principal hacemos click sobre nuestro pipeline
+    * Luego hacemos click en la opción "Build Now". Aparecerá un número de ejecución abajo.
+    * Hacer click sobre el número de ejecucón 
+    * Luego click sobre "Console Output" para visualizar el proceso
+    * Deberia de poder descargarse el archivo "semgrep.json"
+
+## Actividad 3
+
+![Ejercicio](./res/actividad3.png)
+
+### Antes de continuar, **si no se tiene instalado y configurado Jenkins** ejecutar los pasos 1 al 4 de la clase anterior (clase7)
+
+* **Paso 1:** Ejecutamos un contenedor con SonarQube
 
 ```bash
-docker build -t java-python:1.0 .
+docker run -d --name sonarqube \
+    -p 9000:9000 \
+    -v sonarqube_data:/opt/sonarqube/data \
+    -v sonarqube_extensions:/opt/sonarqube/extensions \
+    -v sonarqube_logs:/opt/sonarqube/logs \
+    sonarqube:25.10.0.114319-community
 ```
 
-* Paso 2: Ejecutamos el contenedor jenkins
+* **Paso 2**: Configurar sonarqube
+> http://localhost:9000
 
-```bash
-docker run --name jenkins-blueocean --restart=on-failure --detach --publish 8080:8080 --publish 50000:50000 --volume jenkins-data:/var/jenkins_home --volume /var/run/docker.sock:/var/run/docker.sock --group-add $(stat -c '%g' /var/run/docker.sock) myjenkins-blueocean:2.516.3-1
-
-```
-
-* Paso 3: Desbloqueamos jenkins
+* Ingresar el usuario y password admin
+* Cambiar el password de admin
+* En la pantalla principal hacer click en "Create a local project"
+* En "Project display name" poner un nombre como "clase8-actividad3"
 
 ```bash
 sudo cat /var/lib/docker/volumes/jenkins-data/_data/secrets/initialAdminPassword
