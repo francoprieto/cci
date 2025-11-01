@@ -2,8 +2,10 @@ FROM eclipse-temurin:21-jdk-jammy
 WORKDIR /app
 EXPOSE 8080
 ENV APP_JAR=""
+COPY $APP_JAR /app
 # Entry point script
 CMD sh -c '\
+  ls -la /app \
   if [ -n "$APP_JAR" ]; then \
     JAR_FILE="$APP_JAR"; \
     echo "📦 Using JAR specified by APP_JAR: $JAR_FILE"; \
