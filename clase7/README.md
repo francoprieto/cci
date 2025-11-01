@@ -4,23 +4,17 @@
 
 ![Ejercicio](./res/actividad3.png)
 
-* Paso 1: Construir una imagen llamada "myjenkins-blueocean:2.516.3-1" a partir del Dockerfile y la imagen "springboot-runner"
+* Paso 1: Construir una imagen llamada "myjenkins-blueocean:2.516.3-1" a partir del Dockerfile
 
 ```bash
 # Ejecutar este comando desde cci/docker/jenkins
 docker build -t myjenkins-blueocean:2.516.3-1 .
 ```
 
-```bash
-# Ejecutar este comando desde cci/docker/spring
-docker build -t springboot-runner .
-```
-
-
 * Paso 2: Ejecutamos el contenedor jenkins
 
 ```bash
-docker run --name jenkins-blueocean --restart=on-failure --detach --publish 8080:8080 --publish 50000:50000 --publish 9090:9090 --volume jenkins-data:/var/jenkins_home --volume /var/run/docker.sock:/var/run/docker.sock --group-add $(stat -c '%g' /var/run/docker.sock) myjenkins-blueocean:2.516.3-1
+docker run --name jenkins-blueocean --restart=on-failure --detach --publish 8080:8080 --publish 50000:50000 --volume jenkins-data:/var/jenkins_home --volume /var/run/docker.sock:/var/run/docker.sock --group-add $(stat -c '%g' /var/run/docker.sock) myjenkins-blueocean:2.516.3-1
 
 ```
 
@@ -48,7 +42,8 @@ Pegamos el código del comando anterior en el campo "Administrator password" de 
     * Abajo, en el apartado "Pipeline", el campo "Definition" seleccionamos la opción "Pipeline script from SCM"
     * En "SCM" seleccionamos "Git"
     * En "Repository URL" ponemos: https://github.com/francoprieto/cci.git
-    * En "Branches to build", "Branch Specifier" poner: */main
+    * En "Branches to build" -> "Branch Specifier" poner: */main
+    * En "Script Path" completar con: clase7/Jenkinsfile
     * Finalmente hacer click en "Apply" y luego "Save"
 
 * Paso 6: Ejecutar y verificar pipeline
@@ -59,4 +54,4 @@ Pegamos el código del comando anterior en el campo "Administrator password" de 
 
 * Paso 7: Verificar despliegue
 Ingrese a la siguiente dirección:
-> http://localhost:9090
+> http://localhost:9999
