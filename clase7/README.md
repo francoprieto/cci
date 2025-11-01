@@ -4,11 +4,18 @@
 
 ![Ejercicio](./res/actividad3.png)
 
-* Paso 1: Construir una imagen llamada "myjenkins-blueocean:2.516.3-1" a partir del Dockerfile
+* Paso 1: Construir una imagen llamada "myjenkins-blueocean:2.516.3-1" a partir del Dockerfile y la imagen "springboot-runner"
 
 ```bash
+# Ejecutar este comando desde cci/docker/jenkins
 docker build -t myjenkins-blueocean:2.516.3-1 .
 ```
+
+```bash
+# Ejecutar este comando desde cci/docker/spring
+docker build -t springboot-runner .
+```
+
 
 * Paso 2: Ejecutamos el contenedor jenkins
 
