@@ -2,7 +2,7 @@ FROM eclipse-temurin:21-jdk-jammy
 WORKDIR /app
 EXPOSE 8080
 ENV APP_JAR=""
-COPY $APP_JAR /app
+COPY /tmp/*.jar /app
 # Entry point script
 CMD sh -c '\
   ls -la /app \

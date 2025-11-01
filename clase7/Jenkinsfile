@@ -18,10 +18,8 @@ node {
             sh '''
             echo "Checking built files..."
             ls -l build/libs
-            cp build/libs/domain-tester-service-0.0.1-SNAPSHOT.jar /tmp/app.jar
-            ls -l /tmp
             docker run --rm -p 9999:8080 \
-            -v /tmp:/app \
+            -v $(pwd)/build/libs:/tmp \
             -e APP_JAR=/app/app.jar \
             springboot-runner
             '''            
