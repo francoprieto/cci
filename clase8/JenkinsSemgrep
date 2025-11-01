@@ -1,6 +1,13 @@
 pipeline {
     agent any
     stages {
+
+        stage('Preparando'){
+            steps{
+                deleteDir()
+            }
+        }
+
         stage('SAST-Semgrep') {
             agent {
                 docker {
@@ -9,44 +16,54 @@ pipeline {
                 }
             }
             steps {
+
                 script{
                     sh 'apt-get update && apt-get install -qq -y git'
                     sh 'git config --global --add safe.directory $(pwd)'
                     sh 'pip install -q semgrep'
+                    sh 'rm -rf vulnerable-java-application && git clone https://github.com/DataDog/vulnerable-java-application.git'
                     try {
-                        sh 'semgrep scan --json-output=semgrep.json --error .' // con el flag --json-output generamos un reporte en formato json y con --error hacemos que semgrep devuelva un código de salida distinto de 0 si encuentra alguna vulnerabilidad
-                    }
-                    catch (err) {                                        
+                        sh 'semgrep scan --json-output=semgrep.json --error ./vulnerable-java-application' // con el flag --json-output generamos un reporte en formato json y con --error hacemos que semgrep devuelva un código de salida distinto de 0 si encuentra alguna vulnerabilidad
+                    }catch (err) {                                        
                         unstable(message: "Findings found") // marcamos el build como inestable si semgrep encuentra vulnerabilidades o si queremos bloquearlo podemos usar "error" en lugar de "unstable"
                     }
+                    sh 'mv semgrep.json ..'
                 }
             }
         }        
         stage('Compilation') {
-            agent {
-                docker { image 'php:8.2-cli' }
-            }
             steps {
-                sh 'echo "Compilando..."'
-            }
-        }
-        stage('Build') {
-            agent {
-                docker { image 'php:8.2-cli' }
-            }
-            steps {
-                sh 'echo "docker build -t my-php-app ."'
+                sh 'cp ../semgrep.json .'
+                sh 'rm -rf vulnerable-java-application && git clone https://github.com/DataDog/vulnerable-java-application.git'
+                dir('vulnerable-java-application'){
+                    // Compilamos y contruimos el jar
+                    sh './gradlew clean build bootJar'
+                }
             }
         }
         stage('Deploy') {
-            agent {
-                docker { image 'php:8.2-cli' }
-            }
             steps {
-                sh 'echo "docker run my-php-app ."'
+                dir('vulnerable-java-application'){
+                    sh '''
+                    echo '
+                    FROM eclipse-temurin:21-jdk-jammy \n
+                    WORKDIR /app \n
+                    COPY build/libs/domain-tester-service-0.0.1-SNAPSHOT.jar app.jar \n
+                    EXPOSE 8080 \n
+                    CMD ["java", "-jar", "app.jar"] \n
+                    ' | docker build -t springboot-runner:latest -f - . && \
+                    nohup docker run --rm -p 9999:8080 springboot-runner:latest &   
+                    '''            
+                }
+            }
+        }
+        stage('TEST'){
+            steps{
+                sh 'cat ../semgrep.json'
             }
         }
     }
+    
     post {
         always {
             archiveArtifacts artifacts: 'semgrep.json', fingerprint: true // guardamos el reporte de semgrep como artefacto del build para que persista en Jenkins

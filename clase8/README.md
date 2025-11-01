@@ -1,12 +1,12 @@
-# Clase 7
+# Clase 8
 
-## Actividad 3
+## Actividad 2
 
-![Ejercicio](./res/actividad3.png)
+![Ejercicio](./res/actividad2.png)
 
-### Antes de continuar, ejecutar los pasos 1 al 4 de la clase anterior
+### Antes de continuar, **si no se tiene instalado y configurado Jenkins** ejecutar los pasos 1 al 4 de la clase anterior 
 
-* Paso 1: Seguir los pasos 
+* **Paso 1:** Construir la imagen java-python con el siguiente comando: 
 
 ```bash
 docker build -t java-python:1.0 .
