@@ -16,12 +16,14 @@ node {
     stage('Despliegue') {
         dir('vulnerable-java-application'){
             sh '''
-            echo "Checking built files..."
-            ls -l build/libs
-            docker run --rm -p 9999:8080 \
-            -v $(pwd)/build/libs:/tmp \
-            -e APP_JAR=/app/app.jar \
-            springboot-runner
+            echo '
+            FROM eclipse-temurin:21-jdk-jammy \n
+            WORKDIR /app \n
+            COPY build/libs/domain-tester-service-0.0.1-SNAPSHOT.jar app.jar \n
+            EXPOSE 8080 \n
+            CMD ["nohup","java", "-jar", "app.jar","&"] \n
+            ' | docker build -t springboot-runner:latest -f - . && \
+            docker run --rm -p 9999:8080 springboot-runner:latest    
             '''            
         }
     }
