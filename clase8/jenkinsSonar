@@ -15,16 +15,29 @@ y finalmente creamos un pipeline con el siguiente código.
 pipeline {
     agent any
     stages {
+        stage('Preparacion'){
+            steps {
+                sh 'rm -rf vulnerable-java-application && git clone https://github.com/DataDog/vulnerable-java-application.git'
+            }
+        }
+
         stage('SonarQube analysis') {
             steps {
                 script {
                     scannerHome = tool 'sonar-scanner'// debe coincidir con el nombre de definido en Jenkins -> Manage Jenkins -> Tool Configuration
                 }
                 withSonarQubeEnv('sonar-server') {// Si ha configurado más de una conexión de servidor global, puede especificar su nombre según lo configurado en Jenkins
-                    sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=clase-sonar -Dsonar.sources=."                
+                    dir('vulnerable-java-application'){
+                        sh 'sed -i -e "s/plugins {/plugins{\nid \"org.sonarqube\" version \"6.3.1.5724\"/g" build.gradle'
+                        sh 'cat build.gradle'
+                        //sh './gradlew sonar -Dsonar.projectKey=vulnerable-java-application'
+                        //sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=vulnerable-java-application  -Dsonar.exclusions=**/*.java -Dsonar.sources=."                
+                    }
                 }
             }
         }
+
+        /*
         stage('Compilation') {
             agent {
                 docker { image 'php:8.2-cli' }
@@ -48,6 +61,6 @@ pipeline {
             steps {
                 sh 'echo "docker run my-php-app ."'
             }
-        }
+        }*/
     }
 }
