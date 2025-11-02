@@ -28,9 +28,8 @@ pipeline {
                 }
                 withSonarQubeEnv('sonar-server') {// Si ha configurado más de una conexión de servidor global, puede especificar su nombre según lo configurado en Jenkins
                     dir('vulnerable-java-application'){
-                        sh 'sed -i -e "s/plugins {/plugins{\nid \"org.sonarqube\" version \"6.3.1.5724\"/g" build.gradle'
-                        sh 'cat build.gradle'
-                        //sh './gradlew sonar -Dsonar.projectKey=vulnerable-java-application'
+                        sh 'cp ../build.gradle .'
+                        sh './gradlew sonar -Dsonar.projectKey=vulnerable-java-application'
                         //sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=vulnerable-java-application  -Dsonar.exclusions=**/*.java -Dsonar.sources=."                
                     }
                 }
