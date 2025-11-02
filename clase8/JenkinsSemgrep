@@ -57,11 +57,6 @@ pipeline {
                 }
             }
         }
-        stage('TEST'){
-            steps{
-                sh 'cat ../semgrep.json'
-            }
-        }
     }
     
     post {

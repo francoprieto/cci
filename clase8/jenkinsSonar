@@ -28,38 +28,27 @@ pipeline {
                 }
                 withSonarQubeEnv('sonar-server') {// Si ha configurado más de una conexión de servidor global, puede especificar su nombre según lo configurado en Jenkins
                     dir('vulnerable-java-application'){
-                        sh 'cp ../build.gradle .'
-                        sh './gradlew sonar -Dsonar.projectKey=vulnerable-java-application'
-                        //sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=vulnerable-java-application  -Dsonar.exclusions=**/*.java -Dsonar.sources=."                
+                        sh 'cp ../clase8/build.gradle .'
+                        sh './gradlew build sonar -Dsonar.projectKey=vulnerable-java-application'
                     }
                 }
             }
         }
-
-        /*
-        stage('Compilation') {
-            agent {
-                docker { image 'php:8.2-cli' }
-            }
-            steps {
-                sh 'echo "Compilando..."'
-            }
-        }
-        stage('Build') {
-            agent {
-                docker { image 'php:8.2-cli' }
-            }
-            steps {
-                sh 'echo "docker build -t my-php-app ."'
-            }
-        }
         stage('Deploy') {
-            agent {
-                docker { image 'php:8.2-cli' }
-            }
             steps {
-                sh 'echo "docker run my-php-app ."'
+                dir('vulnerable-java-application'){
+                    sh '''
+                    echo '
+                    FROM eclipse-temurin:21-jdk-jammy \n
+                    WORKDIR /app \n
+                    COPY build/libs/domain-tester-service-0.0.1-SNAPSHOT.jar app.jar \n
+                    EXPOSE 8080 \n
+                    CMD ["java", "-jar", "app.jar"] \n
+                    ' | docker build -t springboot-runner:latest -f - . && \
+                    nohup docker run --rm -p 9999:8080 springboot-runner:latest &   
+                    '''            
+                }
             }
-        }*/
+        }
     }
 }
