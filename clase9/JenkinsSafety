@@ -1,0 +1,72 @@
+pipeline {
+    agent any
+    
+    environment {
+        SAFETY_KEY=credentials('safety')
+    }
+
+    stages {
+
+        stage('Preparando'){
+            steps{
+                deleteDir()
+            }
+        }
+
+        stage('SAST-Semgrep') {
+            agent {
+                docker {
+                    image 'python:3.11-slim' //utilizamos la imagen que contine python y pip instalados
+                    args '-u root' //para ejecutar los comandos como root y evitar problemas de permisos (esto es una mala práctica y lo ideal sería crear una imagen con las herramientas necesarias ya instaladas)
+                }
+            }
+            steps {
+
+                script{
+                    sh 'apt-get update && apt-get install -qq -y git'
+                    sh 'git config --global --add safe.directory $(pwd)'
+                    sh 'pip install -q safety'
+                    sh 'rm -rf vulnerable-java-application && git clone https://github.com/DataDog/vulnerable-java-application.git'
+                    try {
+                        sh "safety scan --key $SAFETY_KEY --output json --save-as safety.json --target ./vulnerable-java-application" 
+                    }catch (err) {                                        
+                        unstable(message: "Findings found") 
+                    }
+                    sh 'mv safety.json ..'
+                }
+            }
+        }        
+        stage('Compilation') {
+            steps {
+                sh 'cp ../safety.json .'
+                sh 'rm -rf vulnerable-java-application && git clone https://github.com/DataDog/vulnerable-java-application.git'
+                dir('vulnerable-java-application'){
+                    // Compilamos y contruimos el jar
+                    sh './gradlew clean build bootJar'
+                }
+            }
+        }
+        stage('Deploy') {
+            steps {
+                dir('vulnerable-java-application'){
+                    sh '''
+                    echo '
+                    FROM eclipse-temurin:21-jdk-jammy \n
+                    WORKDIR /app \n
+                    COPY build/libs/domain-tester-service-0.0.1-SNAPSHOT.jar app.jar \n
+                    EXPOSE 8080 \n
+                    CMD ["java", "-jar", "app.jar"] \n
+                    ' | docker build -t springboot-runner:latest -f - . && \
+                    nohup docker run --rm -p 9999:8080 springboot-runner:latest &   
+                    '''            
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            archiveArtifacts artifacts: 'safety.json', fingerprint: true 
+        }
+    }
+}
