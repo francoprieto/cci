@@ -1,9 +1,5 @@
 pipeline {
     agent any
-    
-    environment {
-        SAFETY_KEY=credentials('safety')
-    }
 
     stages {
 
@@ -13,7 +9,7 @@ pipeline {
             }
         }
 
-        stage('SAST-Semgrep') {
+        stage('Safety analisis') {
             agent {
                 docker {
                     image 'python:3.11-slim' //utilizamos la imagen que contine python y pip instalados
@@ -27,18 +23,17 @@ pipeline {
                     sh 'git config --global --add safe.directory $(pwd)'
                     sh 'pip install -q safety'
                     sh 'rm -rf vulnerable-java-application && git clone https://github.com/DataDog/vulnerable-java-application.git'
-                    try {
-                        sh "safety scan --key $SAFETY_KEY --output json --save-as safety.json --target ./vulnerable-java-application" 
-                    }catch (err) {                                        
-                        unstable(message: "Findings found") 
+                    dir('vulnerable-java-application'){
+                        withCredentials([string(credentialsId: 'safety', variable: 'API_KEY')]){
+                            sh "safety --key $API_KEY scan --stage cicd --output json > safety.json && mv safety.json ../../" 
+                        }
                     }
-                    sh 'mv safety.json ..'
                 }
+
             }
         }        
         stage('Compilation') {
             steps {
-                sh 'cp ../safety.json .'
                 sh 'rm -rf vulnerable-java-application && git clone https://github.com/DataDog/vulnerable-java-application.git'
                 dir('vulnerable-java-application'){
                     // Compilamos y contruimos el jar
@@ -60,6 +55,7 @@ pipeline {
                     nohup docker run --rm -p 9999:8080 springboot-runner:latest &   
                     '''            
                 }
+                sh 'cp ../safety.json .'
             }
         }
     }
